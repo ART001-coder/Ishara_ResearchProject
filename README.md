@@ -1,11 +1,11 @@
-# 🤟 Ishara: ISL to Grammatically Correct Sentence Translator
+#  Ishara: ISL to Grammatically Correct Sentence Translator
 
 > **An Indian Sign Language (ISL) recognition system with LLM-assisted sentence reconstruction.**  
 > *Reference Document: [implementation_plan.md](implementation_plan.md)*
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 **Ishara** bridges the communication gap between Deaf/Hard-of-Hearing individuals who use Indian Sign Language (ISL) and hearing individuals in healthcare and reception environments.
 
@@ -13,7 +13,7 @@ The system processes real-time video feeds from standard webcams, extracts body 
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```
 ┌──────────┐    ┌──────────────────┐    ┌────────────────┐    ┌──────────────┐    ┌────────────────────┐    ┌────────────┐
@@ -33,7 +33,7 @@ The system processes real-time video feeds from standard webcams, extracts body 
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 Ishara/
@@ -64,7 +64,7 @@ Ishara/
 
 ---
 
-## ⚡ Quick Start & Environment Setup
+##  Quick Start & Environment Setup
 
 1. **Clone & Setup Environment:**
    ```bash
@@ -88,7 +88,7 @@ Ishara/
 
 ---
 
-## 📖 Key References in `implementation_plan.md`
+##  Key References in `implementation_plan.md`
 
 - **Resolved Technical Decisions:** Section 1
 - **System Architecture & Layer Specs:** Section 4
