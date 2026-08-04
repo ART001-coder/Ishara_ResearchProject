@@ -1,0 +1,92 @@
+# ==============================================================================
+# Ishara: Central System Configuration (config.yaml)
+# Reference: implementation_plan.md -> Section 6.1 (Hyperparameters)
+#            implementation_plan.md -> Section 4 (System Architecture)
+#            implementation_plan.md -> Section 5 (Dataset Strategy)
+# ==============================================================================
+
+project:
+  name: "Ishara - ISL to Grammatically Correct Sentence Translator"
+  version: "1.0.0"
+  scenario: "hospital_reception" # Primary domain scenario
+  target_vocab_size: 65           # Reference: implementation_plan.md -> Section 1.3 (50-80 words scope)
+
+paths:
+  raw_data_dir: "data/raw"
+  include_dir: "data/raw/include"
+  supplementary_dir: "data/raw/supplementary"
+  processed_dir: "data/processed"
+  train_processed: "data/processed/train"
+  val_processed: "data/processed/val"
+  test_processed: "data/processed/test"
+  vocabulary_file: "data/vocabulary.json"
+  train_split_csv: "data/train_split.csv"
+  val_split_csv: "data/val_split.csv"
+  test_split_csv: "data/test_split.csv"
+  checkpoint_dir: "checkpoints"
+  best_model_path: "checkpoints/best_model.pth"
+  log_dir: "logs"
+
+mediapipe:
+  # Reference: implementation_plan.md -> Section 4.4 (Stage 2: Keypoint Extraction)
+  model_complexity: 1             # 0=Fastest, 1=Balanced, 2=Most Accurate
+  min_detection_confidence: 0.5
+  min_tracking_confidence: 0.5
+  use_face_landmarks: false       # Reference: implementation_plan.md -> Section 4.3 (Default: 225 dims, face excluded)
+  sequence_length: 30             # Fixed temporal window size (30 frames ~ 1 sec @ 30 FPS)
+  landmark_dims:
+    pose_landmarks: 99            # 33 landmarks * 3 (x, y, z)
+    left_hand_landmarks: 63       # 21 landmarks * 3 (x, y, z)
+    right_hand_landmarks: 63      # 21 landmarks * 3 (x, y, z)
+    total_feature_dim: 225        # 99 + 63 + 63 = 225
+
+model:
+  # Reference: implementation_plan.md -> Section 4.6 (Stage 4: Sign Classifier Architecture)
+  architecture: "bilstm"          # Primary: "bilstm", Fallback: "gru"
+  input_dim: 225                  # Feature vector per frame
+  hidden_dim: 256                 # Bidirectional LSTM hidden size (forward 256 + backward 256 = 512)
+  num_layers: 2                   # Stacked LSTM layers
+  num_classes: 65                 # Active vocabulary class count
+  dropout: 0.3                    # Inter-layer LSTM dropout
+  classifier_dropout: 0.4         # Dense head dropout
+  use_attention: true             # Reference: implementation_plan.md -> Section 4.6.2 (Attention Pooling)
+
+training:
+  # Reference: implementation_plan.md -> Section 6.1 (Training Hyperparameters)
+  batch_size: 32                  # Reference: 32-64 range
+  num_epochs: 100
+  learning_rate: 0.001            # 1e-3 initial LR
+  min_learning_rate: 0.0001       # 1e-4 target LR for CosineAnnealingLR
+  weight_decay: 0.01              # AdamW regularization parameter
+  label_smoothing: 0.1            # Mitigates overconfidence on small datasets (Bug M1)
+  gradient_clipping: 1.0          # Prevents exploding gradients (Bug M2)
+  early_stopping_patience: 10     # Epoch patience threshold for early stopping
+  use_class_weights: true         # Handles class imbalance in INCLUDE dataset (Bug M4)
+  seed: 42                        # Global random seed for reproducibility
+
+augmentation:
+  # Reference: implementation_plan.md -> Section 6.2 (Keypoint-Specific Augmentation)
+  # IMPORTANT: Horizontal flip is strictly DISABLED to prevent sign meaning distortion.
+  enable: true
+  augmentation_factor: 5          # Multiplier for training dataset expansion (5x - 10x)
+  random_scale_range: [0.9, 1.1]   # Scale keypoints +-10%
+  random_shift_range: [-0.05, 0.05] # Translate x, y by +-5%
+  random_rotation_deg: 15         # Rotate 2D keypoints +-15 degrees
+  gaussian_noise_std: 0.01        # Gaussian jitter standard deviation
+  frame_dropout_max: 3            # Max frames to zero out per sequence
+
+inference:
+  # Reference: implementation_plan.md -> Section 4.8 & Section 4.9 (Gloss Buffer & Sentence Builder)
+  confidence_threshold: 0.15       # Minimum confidence to accept a sign prediction
+  buffer_min_glosses: 3           # Minimum unique glosses before calling LLM
+  buffer_timeout_sec: 5.0         # Timeout in seconds to trigger sentence building
+  unknown_label: "UNKNOWN"        # Label rendered when prediction confidence < threshold
+
+llm:
+  # Reference: implementation_plan.md -> Section 1.5 & Section 4.9 (Gemini API Config)
+  provider: "gemini"
+  model_name: "gemini-2.0-flash"  # Low-latency model (~200ms target)
+  temperature: 0.3
+  max_output_tokens: 100
+  api_timeout_sec: 3.0            # Timeout before falling back to rule-based template
+  enable_template_fallback: true  # Reference: Section 4.9 (Offline fallback builder)

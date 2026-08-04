@@ -1,0 +1,48 @@
+# ==============================================================================
+# Ishara: Git Ignore Rules
+# Reference: implementation_plan.md -> Section 7 & Section 8.3 (Bug I5: Large Files)
+# ==============================================================================
+
+# Raw and Processed Datasets (Exclusions to prevent committing heavy video/numpy binaries)
+data/raw/
+data/processed/
+*.npy
+*.mp4
+*.avi
+*.mov
+
+# Model Checkpoints and Weights
+checkpoints/
+*.pth
+*.pt
+*.onnx
+
+# Log Files and TensorBoard Outputs
+logs/
+runs/
+*.log
+
+# Keep placeholder files for empty tracked directories
+!.gitkeep
+
+
+# Python Execution Artifacts & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+
+# Environment Variables & Secrets (Gemini API Keys)
+.env
+.env.local
+
+# IDE & OS Specific Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.zip
+

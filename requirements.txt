@@ -1,0 +1,53 @@
+# ==============================================================================
+# Ishara: ISL-to-Text Translation System - Dependency Specification
+# Reference: implementation_plan.md -> Section 12 (Key Dependencies)
+#            implementation_plan.md -> Section 8.3 (Bug I1: Package Version Conflicts)
+# ==============================================================================
+#
+# Environment setup guidelines:
+# 1. Python version required: Python 3.10+ (Recommended: 3.11)
+# 2. Avoid mixing CUDA versions for PyTorch and MediaPipe.
+# 3. MediaPipe + OpenCV version matching prevents video feed locking (Bug I1 & Bug I4).
+
+# Deep Learning Framework (PyTorch with torchvision)
+# Reference: implementation_plan.md -> Section 1.1 (Framework Preference: PyTorch)
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Computer Vision & Pose Extraction
+# Reference: implementation_plan.md -> Section 4.4 (Stage 2: MediaPipe Holistic Keypoint Extraction)
+mediapipe>=0.10.9,<1.0.0
+opencv-python>=4.8.0
+
+# Data Processing, Array Manipulations & Dataframes
+# Reference: implementation_plan.md -> Section 4.3 (Keypoint Feature Vectors: 225 dims per frame)
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Web Application & User Interface
+# Reference: implementation_plan.md -> Section 1.6 & Section 4.10 (Streamlit Interface & Session State)
+streamlit>=1.28.0
+
+# LLM API Integration for Sentence Reconstruction
+# Reference: implementation_plan.md -> Section 1.5 & Section 4.9 (Google Gemini 2.0 Flash Integration)
+google-generativeai>=0.3.0
+google-genai>=0.1.0
+
+# Machine Learning Metrics, Evaluation & Clustering
+# Reference: implementation_plan.md -> Section 9 (Day 9 Metrics & Confusion Matrix Analysis)
+scikit-learn>=1.3.0
+
+# Visualization & Plotting Tools
+# Reference: implementation_plan.md -> Section 9 (Day 11 Evaluation Metrics Visuals)
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Configuration Management & Utility Libraries
+# Reference: implementation_plan.md -> Section 7 & Section 9 (Day 1 Centralized Configuration)
+pyyaml>=6.0.0
+tqdm>=4.65.0
+tensorboard>=2.14.0
+
+# Testing Framework
+# Reference: implementation_plan.md -> Section 7 (Automated Testing Suite)
+pytest>=7.4.0
