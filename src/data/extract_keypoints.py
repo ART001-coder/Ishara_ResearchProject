@@ -87,32 +87,25 @@ def extract_landmarks_from_frame(results) -> np.ndarray:
 
 def get_holistic_detector(model_complexity: int = 1):
     """
-    Safely instantiates MediaPipe Holistic detector supporting legacy solutions and tasks API.
+    Instantiates MediaPipe Holistic detector via the legacy solutions API.
+    Raises loudly on failure instead of silently falling back to a dummy
+    detector - a silent fallback here previously caused every video to be
+    processed with zero landmarks with no visible error (see Bug D5 postmortem:
+    root cause was an incompatible mediapipe pip version, not the videos).
     """
-    try:
-        if hasattr(mp, 'solutions') and hasattr(mp.solutions, 'holistic'):
-            return mp.solutions.holistic.Holistic(
-                static_image_mode=False,
-                model_complexity=model_complexity,
-                min_detection_confidence=0.3,
-                min_tracking_confidence=0.3
-            )
-    except Exception:
-        pass
-
-    # Fallback mock detector for environments without C++ solutions binary
-    class DummyHolistic:
-        def process(self, frame_rgb):
-            class DummyResults:
-                pose_landmarks = None
-                left_hand_landmarks = None
-                right_hand_landmarks = None
-            return DummyResults()
-
-        def close(self):
-            pass
-
-    return DummyHolistic()
+    if not (hasattr(mp, 'solutions') and hasattr(mp.solutions, 'holistic')):
+        raise RuntimeError(
+            "mediapipe.solutions.holistic is not available in this installed mediapipe "
+            "version. Recent mediapipe releases (0.10.31+) dropped the legacy solutions "
+            "API on some platforms. Fix: pip install \"mediapipe==0.10.21\" --force-reinstall "
+            "--no-deps, then restart the runtime."
+        )
+    return mp.solutions.holistic.Holistic(
+        static_image_mode=False,
+        model_complexity=model_complexity,
+        min_detection_confidence=0.3,
+        min_tracking_confidence=0.3
+    )
 
 
 def process_video_to_keypoints(video_path: str, output_npy_path: str, model_complexity: int = 1) -> bool:
@@ -217,5 +210,16 @@ def batch_extract_dataset(split_csv_path: str, output_processed_dir: str) -> Non
 
 
 if __name__ == "__main__":
+    import argparse
     cfg = load_config()
-    print(f"[INFO] Keypoint extraction module loaded. Feature dimension target: {cfg['mediapipe']['landmark_dims']['total_feature_dim']}")
+    parser = argparse.ArgumentParser(description="Batch-extract MediaPipe keypoints for a dataset split.")
+    parser.add_argument("--split", choices=["train", "val", "test", "all"], default="all")
+    args = parser.parse_args()
+
+    paths = cfg["paths"]
+    splits = ["train", "val", "test"] if args.split == "all" else [args.split]
+    for split in splits:
+        batch_extract_dataset(
+            split_csv_path=paths[f"{split}_split_csv"],
+            output_processed_dir=paths[f"{split}_processed"],
+        )

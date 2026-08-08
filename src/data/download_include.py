@@ -258,5 +258,15 @@ def filter_vocabulary_videos(include_dir: str = "data/raw/include",
 
 
 if __name__ == "__main__":
-    cfg = load_config()
-    print("[INFO] Testing INCLUDE download utility module structure...")
+    import argparse
+    parser = argparse.ArgumentParser(description="Download INCLUDE and build filtered split CSVs.")
+    parser.add_argument("--output_dir", type=str, default="data/raw/include")
+    parser.add_argument("--vocab_file", type=str, default="data/vocabulary.json")
+    parser.add_argument("--skip_download", action="store_true",
+                         help="Skip the Zenodo download step and only run the vocabulary filter "
+                              "(use this if you already have data/raw/include populated).")
+    args = parser.parse_args()
+
+    if not args.skip_download:
+        download_include_dataset(output_dir=args.output_dir)
+    filter_vocabulary_videos(include_dir=args.output_dir, vocab_file=args.vocab_file)

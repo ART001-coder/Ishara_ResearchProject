@@ -252,4 +252,8 @@ def run_training(config_path: str = "config.yaml") -> None:
 
 
 if __name__ == "__main__":
-    print("[INFO] Model training script ready.")
+    import argparse
+    parser = argparse.ArgumentParser(description="Train the Ishara sign-recognition model.")
+    parser.add_argument("--config", type=str, default="config.yaml", help="Path to config.yaml")
+    args = parser.parse_args()
+    run_training(args.config)

@@ -7,7 +7,13 @@ Reference: implementation_plan.md -> Section 1.6, 4.10, Section 8.3 (Bug I4), Da
 """
 
 import os
+import sys
 import time
+
+# Ensure the project root (parent of this app/ folder) is importable as 'src.*',
+# regardless of the working directory `streamlit run` was launched from.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import cv2
 import numpy as np
 import streamlit as st

@@ -7,9 +7,25 @@
 
 ##  Project Overview
 
-**Ishara** bridges the communication gap between Deaf/Hard-of-Hearing individuals who use Indian Sign Language (ISL) and hearing individuals in healthcare and reception environments.
+**Ishara** bridges the communication gap between Deaf/Hard-of-Hearing individuals who use Indian Sign Language (ISL) and hearing individuals, using a 65-word general communication vocabulary (greetings, days & time, colours, jobs, people, places, home objects, and adjectives) drawn from the [INCLUDE dataset](https://zenodo.org/records/4010759).
 
 The system processes real-time video feeds from standard webcams, extracts body and hand poses using **MediaPipe Holistic**, classifies temporal keypoint sequences into ISL word glosses using a **Bidirectional LSTM with Attention**, buffers deduplicated predictions, and utilizes the **Google Gemini API (gemini-2.0-flash)** to reconstruct raw sign sequences into natural, grammatically correct English sentences.
+
+> **Note on scope:** the original proposal targeted a hospital-reception vocabulary (doctor, medicine, pain, etc). INCLUDE has no medical category, so the vocabulary was rebuilt from words that actually exist in the dataset (see `src/data/regenerate_vocabulary.py`). See `implementation_plan.md` for the original plan and Section 11 for the contingency reasoning this follows.
+
+---
+
+##  Results
+
+Trained on 951 videos across 65 words (628 train / 135 val / 188 test, INCLUDE dataset, Bi-LSTM w/ attention, ~2.85M params):
+
+| Metric | Score |
+|---|---|
+| Best Validation Accuracy | 87.41% |
+| Held-out Test Top-1 Accuracy | 85.64% |
+| Held-out Test Top-3 Accuracy | 92.02% |
+
+Confusion mostly occurs between visually/semantically similar signs (e.g. white↔pink, and adjacent weekdays being mixed with each other) — see `logs/confusion_matrix.png`.
 
 ---
 
@@ -85,6 +101,20 @@ Ishara/
    ```bash
    streamlit run app/streamlit_app.py
    ```
+
+---
+
+##  Fixes Applied During Integration
+
+Several bugs surfaced when actually running this pipeline end-to-end against real data (not caught by the original unit tests, which mocked most I/O). Documented here for anyone continuing this work:
+
+- **Dead CLI entrypoints** (`src/model/train.py`, `src/data/download_include.py`, `src/data/extract_keypoints.py`): each `if __name__ == "__main__"` block printed an info message instead of calling the actual pipeline function. Fixed to call through with proper `argparse` flags.
+- **Vocabulary/folder matching bug** (`src/data/download_include.py`): INCLUDE folder names carry a numeric prefix (e.g. `23. high`), which never matched plain vocabulary words. Added `sanitize_word()` to strip prefixes and normalize both sides before comparing.
+- **Case-sensitive video extension check** (`src/data/download_include.py`): INCLUDE ships `.MOV` (uppercase), but the filter only matched lowercase `.mov`/`.mp4`/`.avi`, silently finding 0 videos. Fixed with `.lower()`.
+- **Silent MediaPipe fallback** (`src/data/extract_keypoints.py`): a `try/except: pass` swallowed any MediaPipe load failure and substituted a dummy detector that always returned empty landmarks — every video appeared "100% missing hand landmarks" with no visible error. Now raises loudly instead. (Root cause when this fired: mediapipe pip released a version, 0.10.31+, that drops the legacy `solutions` API on some platforms — pin `mediapipe==0.10.21`.)
+- **Missing sys.path setup** (`app/streamlit_app.py`): running `streamlit run app/streamlit_app.py` doesn't put the project root on `sys.path`, so `from src...` imports failed. Added an explicit `sys.path.insert`.
+- **Hardcoded hospital vocabulary**: the original `data/vocabulary.json` assumed medical words (`doctor`, `pain`, `hospital`...) that don't exist anywhere in INCLUDE. Added `src/data/regenerate_vocabulary.py` to build a vocabulary from words that are actually present in the downloaded categories.
+- Added `tests/test_integration_smoke.py`, an end-to-end regression test (synthetic data → train → checkpoint → gloss buffer → sentence) so a broken entrypoint like the above fails CI instead of failing silently in production use.
 
 ---
 
