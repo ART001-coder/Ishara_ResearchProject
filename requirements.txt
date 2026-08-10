@@ -1,9 +1,3 @@
-# ==============================================================================
-# Ishara: ISL-to-Text Translation System - Dependency Specification
-# Reference: implementation_plan.md -> Section 12 (Key Dependencies)
-#            implementation_plan.md -> Section 8.3 (Bug I1: Package Version Conflicts)
-# ==============================================================================
-#
 # Environment setup guidelines:
 # 1. Python version required: Python 3.10+ (Recommended: 3.11)
 # 2. Avoid mixing CUDA versions for PyTorch and MediaPipe.
