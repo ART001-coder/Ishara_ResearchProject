@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0
 
-mediapipe>=0.10.9,<1.0.0
+mediapipe==0.10.21
 opencv-python-headless>=4.8.0
 
 numpy>=1.24.0
