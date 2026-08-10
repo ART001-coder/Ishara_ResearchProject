@@ -6,10 +6,16 @@ Role: Browser-sourced WebRTC Streamlit UI for hosted deployment.
 Why this exists:
     app/streamlit_app.py uses cv2.VideoCapture, which opens a camera on the
     machine running Python. That is the same machine as the browser when run
-    locally, but on a hosted server there is no camera attached at all.
-    This module streams frames from the user's browser instead.
+    locally, but a hosted server has no camera attached at all. This module
+    streams frames from the user's browser instead.
 
     src/ is unchanged - only the frame source differs.
+
+Note on the queue:
+    The result queue MUST be an instance attribute, not a module global.
+    Streamlit re-executes this script on every rerun, which would rebind a
+    global queue to a fresh object while the processor thread kept writing
+    to the old one - results would vanish silently.
 ==============================================================================
 """
 
@@ -18,8 +24,6 @@ import sys
 import queue
 import threading
 
-# Make 'src.*' importable regardless of the working directory streamlit
-# was launched from.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import av
@@ -35,10 +39,6 @@ from src.inference.sentence_builder import SentenceBuilder
 st.set_page_config(page_title="Ishara - ISL Translator", layout="wide")
 
 cfg = load_config("config.yaml")
-
-# Frames are processed on a worker thread that cannot touch st.session_state,
-# so results are handed back to the UI thread through this queue.
-result_queue: "queue.Queue[tuple]" = queue.Queue()
 
 
 @st.cache_resource
@@ -61,6 +61,9 @@ class SignProcessor(VideoProcessorBase):
         )
         self.lock = threading.Lock()
 
+        # Instance attribute - survives Streamlit reruns.
+        self.result_queue: "queue.Queue[tuple]" = queue.Queue()
+
     def recv(self, frame):
         # process_frame expects BGR and returns an annotated RGB frame.
         img = frame.to_ndarray(format="bgr24")
@@ -68,18 +71,20 @@ class SignProcessor(VideoProcessorBase):
 
         with self.lock:
             if self.buffer.add_prediction(word, conf):
-                result_queue.put(("glosses", list(self.buffer.glosses)))
+                self.result_queue.put(("glosses", list(self.buffer.glosses)))
 
             if self.buffer.should_send():
                 sentence = self.builder.build_sentence(self.buffer.flush())
-                result_queue.put(("sentence", sentence))
+                self.result_queue.put(("sentence", sentence))
+                self.result_queue.put(("glosses", []))
 
         return av.VideoFrame.from_ndarray(annotated, format="rgb24")
 
 
 st.title("Ishara - ISL to sentence translator")
 st.caption("Allow camera access, then sign. Glosses accumulate below and are "
-           "reconstructed into a sentence once enough are detected.")
+           "reconstructed into a sentence once three are detected, or after "
+           "five seconds of stillness.")
 
 ctx = webrtc_streamer(
     key="ishara",
@@ -89,8 +94,6 @@ ctx = webrtc_streamer(
     rtc_configuration={
         "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
     },
-    # Drop frames when inference lags instead of queueing them, so the video
-    # does not drift seconds behind the signer.
     async_processing=True,
 )
 
@@ -100,11 +103,21 @@ gloss_box = st.empty()
 st.subheader("Reconstructed sentence")
 sentence_box = st.empty()
 
-if ctx.state.playing:
+if ctx.state.playing and ctx.video_processor is not None:
+    gloss_box.caption("Waiting for signs...")
+
     while True:
-        kind, payload = result_queue.get()
+        try:
+            kind, payload = ctx.video_processor.result_queue.get(timeout=1.0)
+        except queue.Empty:
+            # No new result this second. Loop again so the stream keeps
+            # running rather than blocking forever on a dead queue.
+            continue
 
         if kind == "glosses":
+            if not payload:
+                gloss_box.caption("Waiting for signs...")
+                continue
             with gloss_box.container():
                 for word, conf in payload:
                     st.progress(
