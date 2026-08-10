@@ -11,7 +11,7 @@ torchvision>=0.15.0
 # Computer Vision & Pose Extraction
 # Reference: implementation_plan.md -> Section 4.4 (Stage 2: MediaPipe Holistic Keypoint Extraction)
 mediapipe>=0.10.9,<1.0.0
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
 
 # Data Processing, Array Manipulations & Dataframes
 # Reference: implementation_plan.md -> Section 4.3 (Keypoint Feature Vectors: 225 dims per frame)
