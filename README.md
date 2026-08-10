@@ -25,7 +25,7 @@ Trained on 951 videos across 65 words (628 train / 135 val / 188 test, INCLUDE d
 | Held-out Test Top-1 Accuracy | 85.64% |
 | Held-out Test Top-3 Accuracy | 92.02% |
 
-Confusion mostly occurs between visually/semantically similar signs (e.g. white↔pink, and adjacent weekdays being mixed with each other) — see `logs/confusion_matrix.png`.
+Confusion mostly occurs between visually/semantically similar signs (e.g. white↔pink, and adjacent weekdays being mixed with each other).
 
 ---
 
