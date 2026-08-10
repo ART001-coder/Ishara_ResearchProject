@@ -1,8 +1,3 @@
-# ==============================================================================
-# Ishara: Git Ignore Rules
-# Reference: implementation_plan.md -> Section 7 & Section 8.3 (Bug I5: Large Files)
-# ==============================================================================
-
 # Raw and Processed Datasets (Exclusions to prevent committing heavy video/numpy binaries)
 data/raw/
 data/processed/
