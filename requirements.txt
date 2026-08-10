@@ -10,7 +10,7 @@ torchvision>=0.15.0
 
 # Computer Vision & Pose Extraction
 # Reference: implementation_plan.md -> Section 4.4 (Stage 2: MediaPipe Holistic Keypoint Extraction)
-mediapipe==0.10.30
+mediapipe==0.10.21
 opencv-python-headless>=4.8.0
 
 # Data Processing, Array Manipulations & Dataframes
