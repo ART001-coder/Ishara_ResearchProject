@@ -14,45 +14,45 @@ All previously open questions are resolved below with the most practical choices
 
 | Considered | Verdict | Why |
 |---|---|---|
-| PyTorch | ✅ **Selected** | Eager execution makes debugging trivial; dominant in research; `torch.jit` for easy export; better DataLoader ergonomics |
-| TensorFlow | ❌ Rejected | Heavier setup; graph mode debugging is painful for rapid prototyping; Keras abstraction hides errors |
+| PyTorch |  **Selected** | Eager execution makes debugging trivial; dominant in research; `torch.jit` for easy export; better DataLoader ergonomics |
+| TensorFlow |  Rejected | Heavier setup; graph mode debugging is painful for rapid prototyping; Keras abstraction hides errors |
 
 ### 1.2 Mode: **Real-time webcam (primary) + pre-recorded fallback**
 
 | Considered | Verdict | Why |
 |---|---|---|
-| Real-time webcam | ✅ **Primary** | Required for live demo; more impressive for presentation; proves system works end-to-end |
-| Pre-recorded video | ✅ **Backup** | Pre-recorded demo video as insurance if live demo fails on stage |
+| Real-time webcam |  **Primary** | Required for live demo; more impressive for presentation; proves system works end-to-end |
+| Pre-recorded video |  **Backup** | Pre-recorded demo video as insurance if live demo fails on stage |
 
 ### 1.3 Vocabulary Size: **50–80 words (INCLUDE-50 as baseline)**
 
 | Considered | Verdict | Why |
 |---|---|---|
 | 20–50 words | Too small for a meaningful demo sentence | |
-| **50–80 words** | ✅ **Selected** | Sweet spot: enough for realistic hospital sentences, trainable in 2 weeks, INCLUDE-50 gives us 50 words out of the box |
+| **50–80 words** |  **Selected** | Sweet spot: enough for realistic hospital sentences, trainable in 2 weeks, INCLUDE-50 gives us 50 words out of the box |
 | 100–150 words | Too ambitious for 3 people in 14 days | |
 
 ### 1.4 Data: **Public datasets only — NO manual recording**
 
 | Considered | Verdict | Why |
 |---|---|---|
-| Manual recording | ❌ Rejected | Recording + labelling + QA burns an entire day per 15 words; 3 people can't afford this |
-| **Datasets only** | ✅ **Selected** | INCLUDE (263 words, 4,287 videos) covers our vocabulary; CISLR fills gaps; vocabulary is constrained to what's available |
+| Manual recording |  Rejected | Recording + labelling + QA burns an entire day per 15 words; 3 people can't afford this |
+| **Datasets only** |  **Selected** | INCLUDE (263 words, 4,287 videos) covers our vocabulary; CISLR fills gaps; vocabulary is constrained to what's available |
 
 ### 1.5 LLM API: **Google Gemini (gemini-2.0-flash)**
 
 | Considered | Verdict | Why |
 |---|---|---|
-| **Gemini Flash** | ✅ **Selected** | Lowest latency (~200ms); generous free tier; excellent at structured grammar tasks; Python SDK available |
-| OpenAI GPT | ❌ Rejected | Higher cost; no free tier; overkill for short prompts |
-| Local LLM | ❌ Rejected | Requires GPU RAM we need for training; adds deployment complexity |
+| **Gemini Flash** |  **Selected** | Lowest latency (~200ms); generous free tier; excellent at structured grammar tasks; Python SDK available |
+| OpenAI GPT |  Rejected | Higher cost; no free tier; overkill for short prompts |
+| Local LLM |  Rejected | Requires GPU RAM we need for training; adds deployment complexity |
 
 ### 1.6 UI Framework: **Streamlit**
 
 | Considered | Verdict | Why |
 |---|---|---|
-| **Streamlit** | ✅ **Selected** | Zero frontend code; built-in webcam support; deploys in 1 command; good enough for demo |
-| Flask/React | ❌ Rejected | Requires separate frontend build; 2× the work for the same demo result |
+| **Streamlit** |  **Selected** | Zero frontend code; built-in webcam support; deploys in 1 command; good enough for demo |
+| Flask/React |  Rejected | Requires separate frontend build; 2× the work for the same demo result |
 
 ---
 
@@ -106,7 +106,7 @@ All previously open questions are resolved below with the most practical choices
 | 5. **Sentence Reconstruction** | List of `(word, conf)` | English sentence string | Gemini 2.0 Flash | ~200ms |
 | 6. **Display** | Glosses + sentence | Side-by-side UI | Streamlit | Immediate |
 
-**Total: ~230ms per sign** (target < 500ms ✅)
+**Total: ~230ms per sign** (target < 500ms )
 
 ---
 
@@ -137,10 +137,10 @@ while True:
 
 | Body Part | Landmark Count | × (x, y, z) | Dims | Used? |
 |---|---|---|---|---|
-| Pose (torso, arms, legs) | 33 | × 3 | 99 | ✅ Yes |
-| Left Hand (fingers, palm) | 21 | × 3 | 63 | ✅ Yes |
-| Right Hand (fingers, palm) | 21 | × 3 | 63 | ✅ Yes |
-| Face (mesh) | 468 | × 3 | 1404 | ❌ No (too many dims, Day 6 decision) |
+| Pose (torso, arms, legs) | 33 | × 3 | 99 |  Yes |
+| Left Hand (fingers, palm) | 21 | × 3 | 63 |  Yes |
+| Right Hand (fingers, palm) | 21 | × 3 | 63 |  Yes |
+| Face (mesh) | 468 | × 3 | 1404 |  No (too many dims, Day 6 decision) |
 | **Total used** | **75** | | **225** | |
 
 ```python
@@ -753,7 +753,7 @@ Output: Can I please have some water to drink?"""
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    🤟 ISHARA                              │
+│                     ISHARA                              │
 │          ISL to Text Translation System                   │
 ├────────────────────────┬─────────────────────────────────┤
 │                        │  Detected Signs:                 │
@@ -763,7 +763,7 @@ Output: Can I please have some water to drink?"""
 │   (MediaPipe drawing)  │  │ need   ████████░░░░ 0.85  │  │
 │                        │  └───────────────────────────┘  │
 │                        │                                  │
-│                        │  📝 Translated Sentence:         │
+│                        │   Translated Sentence:         │
 │                        │  ┌───────────────────────────┐  │
 │                        │  │ "I need help from the     │  │
 │                        │  │  doctor."                 │  │
@@ -1060,11 +1060,11 @@ Ishara/
 - ✅ `config.yaml` written
 - ✅ Gemini API key working
 
-**⚠️ Day 1 Risk Check:** If INCLUDE download link is dead, immediately switch to CISLR on HuggingFace (see Section 11.2, R1).
+** Day 1 Risk Check:** If INCLUDE download link is dead, immediately switch to CISLR on HuggingFace (see Section 11.2, R1).
 
 ---
 
-#### 📅 DAY 2 — Keypoint Extraction Pipeline + Model Stub
+####  DAY 2 — Keypoint Extraction Pipeline + Model Stub
 *Team splits into parallel tracks.*
 
 **Morning:**
@@ -1089,14 +1089,14 @@ Ishara/
 | 2.11 | Verify LSTM model parameter count matches Section 4.6.4 (~2.85M) | B | `sum(p.numel() for p in model.parameters())` ≈ 2.85M |
 
 **Day 2 Deliverables:**
-- ✅ Keypoint extraction script working and processing INCLUDE-50
-- ✅ LSTM model compiles and forward pass works
-- ✅ Streamlit shows live webcam with keypoint overlay
-- ✅ Gemini API produces correct sentences from sample inputs
+-  Keypoint extraction script working and processing INCLUDE-50
+-  LSTM model compiles and forward pass works
+-  Streamlit shows live webcam with keypoint overlay
+-  Gemini API produces correct sentences from sample inputs
 
 ---
 
-#### 📅 DAY 3 — First Training Run + LLM Pipeline
+####  DAY 3 — First Training Run + LLM Pipeline
 *A finishes extraction. B does first training. C builds sentence pipeline.*
 
 **Morning:**
@@ -1120,17 +1120,17 @@ Ishara/
 | 3.10 | Test `SentenceBuilder` with 10+ edge cases (empty gloss, single word, all low confidence) | C | All 10 cases produce output without crashing |
 
 **Day 3 Deliverables:**
-- ✅ First model trained (10 epochs, sanity check passes)
-- ✅ Loss decreasing, no NaN — model is learning *something*
-- ✅ Augmentation pipeline built and tested
-- ✅ Sentence builder (Gemini + fallback) working end-to-end
-- ✅ Train/val/test splits created
+-  First model trained (10 epochs, sanity check passes)
+-  Loss decreasing, no NaN — model is learning *something*
+-  Augmentation pipeline built and tested
+-  Sentence builder (Gemini + fallback) working end-to-end
+-  Train/val/test splits created
 
-**⚠️ Day 3 Accuracy Check:** After 10 epochs on INCLUDE-50, expect train accuracy 15–30%. This is NORMAL for a sanity check. If loss isn't decreasing at all, check for bugs in data loading (wrong labels, wrong shapes).
+** Day 3 Accuracy Check:** After 10 epochs on INCLUDE-50, expect train accuracy 15–30%. This is NORMAL for a sanity check. If loss isn't decreasing at all, check for bugs in data loading (wrong labels, wrong shapes).
 
 ---
 
-#### 📅 DAY 4 — Full Dataset + Full Training Launch
+####  DAY 4 — Full Dataset + Full Training Launch
 *Critical day: final data prep, then launch the real training run overnight.*
 
 **Morning:**
@@ -1154,11 +1154,11 @@ Ishara/
 | 4.10 | Write `src/utils/metrics.py` — accuracy, top-k accuracy, confusion matrix functions | B | Functions work on dummy predictions |
 
 **Day 4 Deliverables:**
-- ✅ Full augmented dataset ready (all vocabulary words, 5–10× augmented)
-- ✅ Full training run launched overnight
-- ✅ LLM prompt handles ≥ 9/10 edge cases
-- ✅ Class-weighted loss implemented
-- ✅ Metrics utilities ready
+-  Full augmented dataset ready (all vocabulary words, 5–10× augmented)
+-  Full training run launched overnight
+-  LLM prompt handles ≥ 9/10 edge cases
+-  Class-weighted loss implemented
+-  Metrics utilities ready
 
 ---
 
@@ -1168,7 +1168,7 @@ Ishara/
 
 ---
 
-#### 📅 DAY 5 — Analyze Overnight Training + Build Real-Time Predictor
+####  DAY 5 — Analyze Overnight Training + Build Real-Time Predictor
 
 **Morning:**
 
@@ -1190,14 +1190,14 @@ Ishara/
 | 5.9 | Test predictor with dummy model (random predictions) just to verify pipeline works | C | Pipeline runs without crashes for 60 seconds |
 
 **Day 5 Deliverables:**
-- ✅ Know exact accuracy numbers (train/val/test)
-- ✅ Per-class accuracy breakdown
-- ✅ Real-time predictor script running (even with imperfect predictions)
-- ✅ Kill switch decision made if accuracy < 40%
+-  Know exact accuracy numbers (train/val/test)
+-  Per-class accuracy breakdown
+-  Real-time predictor script running (even with imperfect predictions)
+-  Kill switch decision made if accuracy < 40%
 
 ---
 
-#### 📅 DAY 6 — Architecture Decision Day (LSTM vs GRU, Face Landmarks)
+####  DAY 6 — Architecture Decision Day (LSTM vs GRU, Face Landmarks)
 
 > [!WARNING]
 > **DAY 6 IS THE KILL SWITCH.** If accuracy is below 40% after trying both architectures, you MUST reduce vocabulary (see Section 11.4).
@@ -1221,17 +1221,17 @@ Ishara/
 | 6.8 | **DECISION CHECKPOINT**: Pick final architecture (LSTM or GRU, attention or AvgPool, face or no face) | All | Decision documented, `config.yaml` updated |
 
 **Day 6 Deliverables:**
-- ✅ LSTM vs GRU comparison table
-- ✅ Attention vs AvgPool comparison
-- ✅ Augmentation ablation results
-- ✅ **Final architecture chosen and locked**
-- ✅ Live predictions visible in predictor script
+-  LSTM vs GRU comparison table
+-  Attention vs AvgPool comparison
+-  Augmentation ablation results
+-  **Final architecture chosen and locked**
+-  Live predictions visible in predictor script
 
-**🚨 Kill Switch Check:** If best accuracy < 40%, IMMEDIATELY reduce vocabulary to 20–30 words and retrain tonight.
+** Kill Switch Check:** If best accuracy < 40%, IMMEDIATELY reduce vocabulary to 20–30 words and retrain tonight.
 
 ---
 
-#### 📅 DAY 7 — Best Model Training + LLM Hardening
+####  DAY 7 — Best Model Training + LLM Hardening
 
 **Morning:**
 
@@ -1252,14 +1252,14 @@ Ishara/
 | 7.8 | Run best model training overnight | B | Training in progress |
 
 **Day 7 Deliverables:**
-- ✅ Best model training with final architecture + cosine LR
-- ✅ LLM prompt handles 18/20 edge cases
-- ✅ Template fallback works offline
-- ✅ Target: val accuracy ≥ 55%
+-  Best model training with final architecture + cosine LR
+-  LLM prompt handles 18/20 edge cases
+-  Template fallback works offline
+-  Target: val accuracy ≥ 55%
 
 ---
 
-#### 📅 DAY 8 — 🎉 Full Pipeline Integration
+####  DAY 8 —  Full Pipeline Integration
 
 **Morning:**
 
@@ -1281,14 +1281,14 @@ Ishara/
 | 8.9 | Test on all 3 team members' machines — same setup, same model | All | Works on at least 2/3 machines |
 
 **Day 8 Deliverables:**
-- ✅ 🎉 **FIRST WORKING END-TO-END DEMO**
-- ✅ Sign in front of webcam → sentence displayed
-- ✅ Latency < 500ms
-- ✅ Works on ≥ 2 machines
+-   **FIRST WORKING END-TO-END DEMO**
+-  Sign in front of webcam → sentence displayed
+-  Latency < 500ms
+-  Works on ≥ 2 machines
 
 ---
 
-#### 📅 DAY 9 — Testing, Confusion Analysis, Bug Fixes
+####  DAY 9 — Testing, Confusion Analysis, Bug Fixes
 
 **Morning:**
 
@@ -1309,10 +1309,10 @@ Ishara/
 | 9.8 | If external signer accuracy < 30%: apply per-sample normalization to keypoints | A + B | Keypoints normalized relative to shoulder width |
 
 **Day 9 Deliverables:**
-- ✅ Confusion matrix with top-10 confused pairs addressed
-- ✅ Tested on ≥ 2 external signers
-- ✅ All integration bugs fixed
-- ✅ Basic test suite passing
+-  Confusion matrix with top-10 confused pairs addressed
+-  Tested on ≥ 2 external signers
+-  All integration bugs fixed
+-  Basic test suite passing
 
 ---
 
@@ -1322,14 +1322,14 @@ Ishara/
 
 ---
 
-#### 📅 DAY 10 — Threshold Tuning & Error Handling
+####  DAY 10 — Threshold Tuning & Error Handling
 
 **Morning:**
 
 | # | Task | Owner | Done When |
 |---|---|---|---|
 | 10.1 | Sweep confidence threshold: test 0.3, 0.4, 0.5, 0.6, 0.7 — find optimal | B | Threshold chosen that balances precision vs recall |
-| 10.2 | Add "Unknown Sign ❓" display in UI for below-threshold predictions | C | Low-confidence predictions show as "Unknown" instead of wrong word |
+| 10.2 | Add "Unknown Sign " display in UI for below-threshold predictions | C | Low-confidence predictions show as "Unknown" instead of wrong word |
 | 10.3 | Add error handling: camera disconnected, API timeout, model load failure | C | Each failure mode shows user-friendly message, no stack traces |
 
 **Afternoon:**
@@ -1342,7 +1342,7 @@ Ishara/
 
 ---
 
-#### 📅 DAY 11 — UI Polish & Demo Script
+####  DAY 11 — UI Polish & Demo Script
 
 **Morning:**
 
@@ -1363,10 +1363,10 @@ Ishara/
 
 ---
 
-#### 📅 DAY 12 — Feature Freeze & Backup Recording
+####  DAY 12 — Feature Freeze & Backup Recording
 
 > [!IMPORTANT]
-> **🔒 FEATURE FREEZE at end of Day 12.** NO new code after today. Only bug fixes allowed Days 13–14.
+> ** FEATURE FREEZE at end of Day 12.** NO new code after today. Only bug fixes allowed Days 13–14.
 
 **Morning:**
 
@@ -1386,7 +1386,7 @@ Ishara/
 
 ---
 
-#### 📅 DAY 13 — Presentation Prep & Dress Rehearsal
+####  DAY 13 — Presentation Prep & Dress Rehearsal
 
 **Morning:**
 
@@ -1408,7 +1408,7 @@ Ishara/
 
 ---
 
-#### 📅 DAY 14 — 🎯 DEMO DAY
+####  DAY 14 —  DEMO DAY
 
 **Morning:**
 
@@ -1427,7 +1427,7 @@ Ishara/
 | 14.6 | **If live demo fails:** Immediately switch to `backup_recording.mp4` — no debugging on stage | C |
 | 14.7 | **Q&A:** Handle questions about accuracy, limitations, future work | All |
 
-**🎉 DONE.**
+** DONE.**
 
 ---
 
@@ -1543,7 +1543,7 @@ Even in the absolute worst case, you **WILL** have:
 
 | Component | Worst Case | Realistic Case | Best Case |
 |---|---|---|---|
-| Working pipeline | ✅ Yes (even with 10 words) | ✅ Yes (50 words) | ✅ Yes (80 words) |
+| Working pipeline |  Yes (even with 10 words) |  Yes (50 words) |  Yes (80 words) |
 | Sign recognition | 10–15 distinct signs, ~85% accuracy | 50 signs, ~60% accuracy | 65+ signs, ~75% accuracy |
 | Sentence output | Template-based (no API) | Gemini API, decent quality | Gemini, excellent quality |
 | Live demo | Pre-recorded backup | Works live for practiced signs | Works live for any vocabulary sign |
