@@ -55,6 +55,7 @@ Confusion mostly occurs between visually/semantically similar signs (e.g. white�
 Ishara/
 ├── README.md                          # Project documentation
 ├── requirements.txt                   # Environment dependencies
+├── packages.txt                       # Apt system packages (hosted deployment)
 ├── config.yaml                        # Central system hyperparameters & configuration
 ├── .gitignore                         # Data/checkpoint exclusion rules
 ├── IShara_Project_Proposal.md         # Initial project proposal
@@ -72,7 +73,8 @@ Ishara/
 │   └── utils/                         # Config loader, metrics & visualizers
 │
 ├── app/
-│   └── streamlit_app.py               # Main UI application
+│   ├── streamlit_app.py               # Local UI — server-side webcam (cv2.VideoCapture)
+│   └── app_webrtc.py                  # Hosted UI — browser webcam streamed via WebRTC
 │
 ├── tests/                             # Unit testing suite
 └── demo/                              # Presentation scripts & backup media
@@ -97,10 +99,48 @@ Ishara/
    export GEMINI_API_KEY="your_api_key_here"  # On Windows PowerShell: $env:GEMINI_API_KEY="your_key"
    ```
 
-3. **Run Streamlit Web Application:**
+3. **Run Streamlit Web Application (local webcam):**
    ```bash
    streamlit run app/streamlit_app.py
    ```
+
+---
+
+##  Hosted Deployment
+
+`app/streamlit_app.py` uses `cv2.VideoCapture`, which opens a camera on **the machine
+running Python**. Locally that machine is also the machine with the webcam, so it works.
+On any hosted server there is no camera attached — `cap.isOpened()` returns `False` and
+the app stalls at "Webcam device unreachable". This is not a permissions problem and no
+camera index will fix it.
+
+`app/app_webrtc.py` is the deployment entrypoint. It uses `streamlit-webrtc` to stream
+frames from the **user's browser** to the server, so the camera stays on the client.
+Stages 2–6 of the pipeline are untouched; `src/` requires no changes.
+
+**Deploying to Streamlit Community Cloud:**
+
+1. Push to GitHub, then create an app at [share.streamlit.io](https://share.streamlit.io).
+2. Main file path: `app/app_webrtc.py`
+3. Under **Advanced settings**, set the Python version to **3.11** (mediapipe 0.10.21
+   has no wheel for 3.13+).
+4. Under **Secrets**, add:
+   ```toml
+   GEMINI_API_KEY = "your_api_key_here"
+   ```
+   Streamlit exposes secrets as environment variables, so `sentence_builder.py` reads
+   this via `os.environ.get` with no code change.
+
+**Known constraints on free-tier hosting:**
+
+- Shared CPU delivers roughly 8–15 FPS versus 30 locally. The model was trained on
+  30-frame windows at 30 FPS, so signs are sampled across a longer real-time window
+  and confidence drops noticeably. Hold each sign ~3 seconds.
+- WebRTC negotiates a peer connection via STUN. This works on home and mobile networks
+  but is frequently blocked on institutional and corporate firewalls, where the page
+  loads but video never starts. A TURN relay is required in those environments.
+- Hugging Face Spaces is no longer a free alternative: the Streamlit SDK is deprecated
+  in favour of Docker, and the Docker SDK now requires a paid plan.
 
 ---
 
@@ -115,6 +155,29 @@ Several bugs surfaced when actually running this pipeline end-to-end against rea
 - **Missing sys.path setup** (`app/streamlit_app.py`): running `streamlit run app/streamlit_app.py` doesn't put the project root on `sys.path`, so `from src...` imports failed. Added an explicit `sys.path.insert`.
 - **Hardcoded hospital vocabulary**: the original `data/vocabulary.json` assumed medical words (`doctor`, `pain`, `hospital`...) that don't exist anywhere in INCLUDE. Added `src/data/regenerate_vocabulary.py` to build a vocabulary from words that are actually present in the downloaded categories.
 - Added `tests/test_integration_smoke.py`, an end-to-end regression test (synthetic data → train → checkpoint → gloss buffer → sentence) so a broken entrypoint like the above fails CI instead of failing silently in production use.
+
+Additional issues surfaced when deploying to a hosted server (see **Hosted Deployment** above):
+
+- **Server-side camera assumption** (`app/streamlit_app.py`): `cv2.VideoCapture` binds to a
+  camera on the host running Python, which does not exist on a remote server. Added
+  `app/app_webrtc.py` rather than modifying the local app, so both modes remain available.
+  `cv2.CAP_DSHOW` compounds this — DirectShow is Windows-only and absent on Linux entirely.
+- **Orphaned result queue** (`app/app_webrtc.py`): `streamlit-webrtc` runs `recv()` on a worker
+  thread, and Streamlit re-executes the script on every rerun. A module-level `queue.Queue`
+  is therefore rebound to a fresh object while the processor thread keeps writing to the old
+  one — predictions appeared in the video overlay but never reached the UI. The queue must be
+  an instance attribute, read via `ctx.video_processor.result_queue`.
+- **CUDA wheels on a CPU host** (`requirements.txt`): a bare `torch>=2.0.0` pulls multi-gigabyte
+  CUDA builds that cannot be used on a CPU-only container and exhaust the disk quota. Pinned to
+  the CPU wheel index via `--extra-index-url https://download.pytorch.org/whl/cpu`.
+- **GUI OpenCV on a headless server** (`requirements.txt`): `opencv-python` links against X11
+  libraries that are absent on a headless image. Switched to `opencv-python-headless`.
+- **Debian `t64` package names** (`packages.txt`): the deployment base image is Debian trixie,
+  which carries the 64-bit `time_t` transition — `libglib2.0-0t64` is correct there and
+  `libglib2.0-0` does not resolve. Worth checking against the target image rather than assuming.
+- **Unpinned mediapipe** (`requirements.txt`): resolving to 0.10.31+ removes the legacy
+  `solutions` API and trips the guard in `extract_keypoints.py` at runtime rather than install
+  time. Pinned to `mediapipe==0.10.21`.
 
 ---
 
