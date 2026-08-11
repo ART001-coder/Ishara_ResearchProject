@@ -773,6 +773,30 @@ Output: Can I please have some water to drink?"""
 └──────────────────────────────────────────────────────────┘
 ```
 
+### 4.11 Stage 1 Variant — Hosted Deployment (WebRTC)
+
+Section 4.2 specifies `cv2.VideoCapture(0)` for Stage 1. That call opens a camera on the
+machine executing the Python process. Under `streamlit run` on a laptop, the server process
+and the browser are the same machine, so the distinction is invisible. On a hosted server
+they are different machines and the server has no camera attached at all — `cap.isOpened()`
+returns `False` regardless of camera index or browser permission.
+
+`app/app_webrtc.py` replaces Stage 1 only. The browser captures frames and streams them to
+the server over WebRTC; `streamlit-webrtc` delivers each frame to a `recv()` callback, which
+hands the same BGR array to Stage 2. **Stages 2–6 and all of `src/` are unchanged.**
+
+| Property | Local (`streamlit_app.py`) | Hosted (`app_webrtc.py`) |
+|---|---|---|
+| Frame source | `cv2.VideoCapture` on server | Browser camera over WebRTC |
+| Loop model | `while True` + `cap.read()` | `recv()` callback on worker thread |
+| Observed FPS | ~30 | ~8–15 (shared CPU) |
+| Network requirement | None | STUN; TURN behind restrictive firewalls |
+
+The FPS gap has a direct accuracy cost: Section 3 fixes the window at 30 frames, so at
+~12 FPS that window spans ~2.5 s of real time rather than 1 s. Signs must be held longer
+than in training, and confidence falls accordingly. This is a compute limit, not a code
+defect — it resolves with more CPU, not with tuning.
+
 ---
 
 ## 5. Dataset Strategy (Datasets Only — No Manual Recording)
@@ -920,7 +944,8 @@ Ishara/
 │       └── visualize.py             # Keypoint visualization helpers
 │
 ├── app/
-│   └── streamlit_app.py             # Main Streamlit application
+│   ├── streamlit_app.py             # Local Streamlit app (server-side webcam)
+│   └── app_webrtc.py                # Hosted Streamlit app (browser webcam via WebRTC)
 │
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
@@ -975,6 +1000,10 @@ Ishara/
 | I3 | **Gemini API timeout during demo** | MEDIUM | Demo freezes | 3-second timeout + template fallback |
 | I4 | **Streamlit re-runs on every click** | HIGH | Webcam restarts | `st.session_state` for persistence |
 | I5 | **Model too large for Git** | LOW | Can't share | `.gitignore` checkpoints; share via Drive |
+| I6 | **`cv2.VideoCapture` has no camera on a hosted server** | CERTAIN (if deployed) | App unusable remotely | `app/app_webrtc.py` — stream browser camera via `streamlit-webrtc` |
+| I7 | **Module-level queue orphaned by Streamlit rerun** | HIGH | Predictions never reach UI | Queue as instance attribute; read via `ctx.video_processor` |
+| I8 | **Unpinned `torch` pulls CUDA wheels onto CPU host** | HIGH | Build exceeds disk quota | `--extra-index-url https://download.pytorch.org/whl/cpu` |
+| I9 | **Apt package names differ across Debian releases** | MEDIUM | Build fails before pip runs | Verify against target image (`libglib2.0-0t64` on trixie) |
 
 ### 8.4 Demo-Day Bugs
 
